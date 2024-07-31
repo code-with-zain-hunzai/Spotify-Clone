@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+::-webkit-scrollbar{
+    display: none;
+}
+
 @layer components{
     body{
         color: white;
