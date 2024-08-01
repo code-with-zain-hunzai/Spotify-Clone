@@ -4,7 +4,7 @@ import { playerContext } from '../context/PlayerContext'
 
 const Player = () => {
 
-    const { track, seekBar, seekBg, playStatus, play, pause, time, previous, next,seekSong } = useContext(playerContext)
+    const { track, seekBar, seekBg, playStatus, play, pause, time, previous, next,seekSong,shuffle } = useContext(playerContext)
     return (
         <div className='h-[10%] bg-black flex justify-between items-center text-center px-4'>
             <div className='hidden lg:flex items-center gap-4'>
@@ -16,7 +16,7 @@ const Player = () => {
             </div>
             <div className="flex flex-col items-center gap-1 m-auto">
                 <div className='flex gap-4'>
-                    <img className='w-4 cursor-pointer' src={assets.shuffle_icon} alt="" />
+                    <img onClick={shuffle} className='w-4 cursor-pointer' src={assets.shuffle_icon} alt="" />
                     <img onClick={previous} className='w-4 cursor-pointer' src={assets.prev_icon} alt="" />
                     {playStatus
                         ? <img onClick={pause} className='w-4 cursor-pointer' src={assets.pause_icon} alt="" />

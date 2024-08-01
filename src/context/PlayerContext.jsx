@@ -52,6 +52,19 @@ const PlayerContextProvider = (props) => {
         }
     }
 
+    const shuffle = async () => {
+        let randomIndex = Math.floor(Math.random() * songsData.length);
+        while (songsData[randomIndex].id === track.id) {
+            randomIndex = Math.floor(Math.random() * songsData.length);
+        }
+        const shuffledTrack = songsData[randomIndex];
+        setTrack(shuffledTrack);
+        audioRef.current.src = shuffledTrack.audioSrc;
+        await audioRef.current.load();
+        await audioRef.current.play();
+        setPlayStatus(true);
+    }
+
     const seekSong = async (e)=>{
 audioRef.current.currentTime=((e.nativeEvent.offsetX/seekBg.current.offsetWidth)*audioRef.current.duration)
     }
@@ -67,7 +80,8 @@ audioRef.current.currentTime=((e.nativeEvent.offsetX/seekBg.current.offsetWidth)
         play, pause,
         playWithId,
         previous, next,
-        seekSong
+        seekSong,
+        shuffle
     }
 
     useEffect(() => {
