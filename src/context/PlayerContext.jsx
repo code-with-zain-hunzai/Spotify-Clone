@@ -8,8 +8,11 @@ const PlayerContextProvider = (props) => {
     const seekBg = useRef();
     const seekBar = useRef();
 
-    const [track, setTrack] = useState(songsData[0])
+    const [track, setTrack] = useState(songsData[0]);
     const [playStatus, setPlayStatus] = useState(false);
+    const [volume, setVolume] = useState(1);
+    const [isMuted, setIsMuted] = useState(false);
+    const [previousVolume, setPreviousVolume] = useState(1);
     const [time, setTime] = useState({
         currentTime: {
             second: 0,
@@ -19,38 +22,65 @@ const PlayerContextProvider = (props) => {
             second: 0,
             minute: 0
         }
-    })
+    });
+
+    useEffect(() => {
+        audioRef.current.volume = volume;
+    }, [volume]);
 
     const play = () => {
         audioRef.current.play();
-        setPlayStatus(true)
-    }
+        setPlayStatus(true);
+    };
 
     const pause = () => {
-        audioRef.current.pause()
-        setPlayStatus(false)
-    }
+        audioRef.current.pause();
+        setPlayStatus(false);
+    };
+
+    const toggleMute = () => {
+        setIsMuted(prev => !prev);
+        if (audioRef.current.muted) {
+            setVolume(previousVolume);
+        } else {
+            setPreviousVolume(volume);
+            setVolume(0);
+        }
+        audioRef.current.muted = !audioRef.current.muted;
+    };
+
+    const adjustVolume = (e) => {
+        const newVolume = e.target.value / 100;
+        setVolume(newVolume);
+        audioRef.current.volume = newVolume;
+        if (newVolume === 0) {
+            setIsMuted(true);
+        } else {
+            setIsMuted(false);
+        }
+    };
 
     const playWithId = async (id) => {
         await setTrack(songsData[id]);
         await audioRef.current.play();
-        setPlayStatus(true)
-    }
+        setPlayStatus(true);
+    };
 
     const previous = async () => {
         if (track.id > 0) {
-            await setTrack(songsData[track.id - 1])
-            await audioRef.current.play()
-            setPlayStatus(true)
+            await setTrack(songsData[track.id - 1]);
+            await audioRef.current.play();
+            setPlayStatus(true);
         }
-    }
+    };
+
     const next = async () => {
         if (track.id < songsData.length - 1) {
-            await setTrack(songsData[track.id + 1])
-            await audioRef.current.play()
-            setPlayStatus(true)
+            await setTrack(songsData[track.id + 1]);
+            await audioRef.current.play();
+            setPlayStatus(true);
         }
-    }
+    };
 
     const shuffle = async () => {
         let randomIndex = Math.floor(Math.random() * songsData.length);
@@ -63,11 +93,29 @@ const PlayerContextProvider = (props) => {
         await audioRef.current.load();
         await audioRef.current.play();
         setPlayStatus(true);
-    }
+    };
 
-    const seekSong = async (e)=>{
-audioRef.current.currentTime=((e.nativeEvent.offsetX/seekBg.current.offsetWidth)*audioRef.current.duration)
-    }
+    const seekSong = (e) => {
+        audioRef.current.currentTime = (e.nativeEvent.offsetX / seekBg.current.offsetWidth) * audioRef.current.duration;
+    };
+
+    useEffect(() => {
+        setTimeout(() => {
+            audioRef.current.ontimeupdate = () => {
+                seekBar.current.style.width = (Math.floor(audioRef.current.currentTime / audioRef.current.duration * 100)) + "%";
+                setTime({
+                    currentTime: {
+                        second: Math.floor(audioRef.current.currentTime % 60),
+                        minute: Math.floor(audioRef.current.currentTime / 60)
+                    },
+                    totalTime: {
+                        second: Math.floor(audioRef.current.duration % 60),
+                        minute: Math.floor(audioRef.current.duration / 60)
+                    }
+                });
+            };
+        }, 1000);
+    }, [audioRef]);
 
     const contextValue = {
         audioRef,
@@ -81,27 +129,10 @@ audioRef.current.currentTime=((e.nativeEvent.offsetX/seekBg.current.offsetWidth)
         playWithId,
         previous, next,
         seekSong,
-        shuffle
-    }
-
-    useEffect(() => {
-        setTimeout(() => {
-            audioRef.current.ontimeupdate = () => {
-                seekBar.current.style.width = (Math.floor(audioRef.current.currentTime / audioRef.current.duration * 100)) + "%"
-                setTime({
-                    currentTime: {
-                        second: Math.floor(audioRef.current.currentTime % 60),
-                        minute: Math.floor(audioRef.current.currentTime / 60)
-                    },
-                    totalTime: {
-                        second: Math.floor(audioRef.current.duration % 60),
-                        minute: Math.floor(audioRef.current.duration / 60)
-                    }
-                })
-            }
-        }, 1000)
-    }, [audioRef])
-
+        shuffle,
+        volume, adjustVolume,
+        isMuted, toggleMute
+    };
 
     return (
         <playerContext.Provider value={contextValue}>
